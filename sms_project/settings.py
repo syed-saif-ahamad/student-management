@@ -5,6 +5,8 @@ Django settings for sms_project.
 import os
 from pathlib import Path
 
+import dj_database_url
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get(
@@ -14,7 +16,10 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get(
+    'DJANGO_ALLOWED_HOSTS',
+    'localhost,127.0.0.1,.vercel.app'
+).split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -32,6 +37,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -60,29 +66,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'sms_project.wsgi.application'
 
-USE_SQLITE = os.environ.get('USE_SQLITE', 'False').lower() == 'true'
+# Neon PostgreSQL connection (falls back to DATABASE_URL env var in production)
+NEON_DB_URL = 'postgresql://neondb_owner:npg_jk2yH5ZDezFw@ep-cool-hill-apz2hth4.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require'
 
-if USE_SQLITE:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME', 'student_management_db'),
-            'USER': os.environ.get('DB_USER', 'root'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-            },
-        }
-    }
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', NEON_DB_URL),
+        conn_max_age=600,
+        ssl_require=True,
+    )
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -99,6 +92,16 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise compressed static file storage
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
