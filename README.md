@@ -1,5 +1,4 @@
 # Student Management & Performance Analysis System
-
 Django + MySQL application for managing students, attendance, marks, analytics, and ML-based performance prediction.
 
 ## Features
