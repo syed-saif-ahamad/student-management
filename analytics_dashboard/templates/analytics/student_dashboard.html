@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-person-badge me-2"></i>Student Dashboard</h2>
+        <a href="{% url 'analytics:download_report' %}" class="btn btn-outline-primary">
+            <i class="bi bi-download me-1"></i>Download Report
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3"><strong>Roll No:</strong> {{ student.roll_no }}</div>
+                <div class="col-md-3"><strong>Name:</strong> {{ student.name }}</div>
+                <div class="col-md-3"><strong>Department:</strong> {{ student.department }}</div>
+                <div class="col-md-3"><strong>Year:</strong> {{ student.year }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-success border-4">
+                <div class="card-body">
+                    <h6 class="text-muted">Attendance</h6>
+                    <h2>{{ attendance_pct }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-primary border-4">
+                <div class="card-body">
+                    <h6 class="text-muted">Current Marks</h6>
+                    <h2>{{ current_pct }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-info border-4">
+                <div class="card-body">
+                    <h6 class="text-muted">Predicted Final Score</h6>
+                    <h2>{{ prediction }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-warning border-4">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Exams</h6>
+                    <h2>{{ records.count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">Performance Graph</h5></div>
+                <div class="card-body"><canvas id="performanceChart" height="200"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">Exam History</h5></div>
+                <ul class="list-group list-group-flush">
+                    {% for record in records %}
+                    <li class="list-group-item">
+                        <strong>{{ record.subject }}</strong> ({{ record.exam_type }})
+                        <br><small>{{ record.marks }}/{{ record.max_marks }} — {{ record.exam_date }}</small>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">No exam records.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+new Chart(document.getElementById('performanceChart'), {
+    type: 'line',
+    data: {
+        labels: {{ performance_labels|safe }},
+        datasets: [{
+            label: 'Score %',
+            data: {{ performance_values|safe }},
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.15)',
+            fill: true,
+            tension: 0.3,
+        }]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
+});
+</script>
+{% endblock %}

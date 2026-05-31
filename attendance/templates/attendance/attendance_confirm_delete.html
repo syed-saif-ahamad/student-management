@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Attendance - SMS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-body text-center p-4">
+                    <h4>Delete Attendance Record?</h4>
+                    <p>{{ record.student.name }} — {{ record.date }} ({{ record.status }})</p>
+                    <form method="post" class="d-flex justify-content-center gap-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                        <a href="{% url 'attendance:list' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.name }} - SMS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Student Profile</h4>
+            <div>
+                <a href="{% url 'students:update' student.pk %}" class="btn btn-warning btn-sm">Edit</a>
+                <a href="{% url 'students:list' %}" class="btn btn-secondary btn-sm">Back</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Roll No:</strong> {{ student.roll_no }}</p>
+                    <p><strong>Name:</strong> {{ student.name }}</p>
+                    <p><strong>Email:</strong> {{ student.email }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Department:</strong> {{ student.department }}</p>
+                    <p><strong>Year:</strong> {{ student.year }}</p>
+                    <p><strong>Phone:</strong> {{ student.phone }}</p>
+                    <p><strong>Joining Date:</strong> {{ student.joining_date }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}My Marks - SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h2 class="mb-4"><i class="bi bi-journal-text me-2"></i>My Marks</h2>
+
+    {% if subject_wise %}
+    <div class="row mb-4">
+        {% for item in subject_wise %}
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">{{ item.subject }}</h6>
+                    <h4>{{ item.total }}/{{ item.max_total }}</h4>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Subject</th>
+                        <th>Exam Type</th>
+                        <th>Marks</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.subject }}</td>
+                        <td>{{ record.exam_type }}</td>
+                        <td>{{ record.marks }}/{{ record.max_marks }} ({{ record.percentage }}%)</td>
+                        <td>{{ record.exam_date }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted py-4">No marks records yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

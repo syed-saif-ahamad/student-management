@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Dashboard - SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h2 class="mb-4"><i class="bi bi-speedometer2 me-2"></i>Faculty Dashboard</h2>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-primary border-4">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase">Total Students</h6>
+                    <h2>{{ total_students }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-success border-4">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase">Average Marks</h6>
+                    <h2>{{ average_marks }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-info border-4">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase">Pass Percentage</h6>
+                    <h2>{{ pass_percentage }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-warning border-4">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase">Attendance %</h6>
+                    <h2>{{ attendance_percentage }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if top_performer %}
+    <div class="alert alert-success">
+        <i class="bi bi-trophy me-2"></i>
+        Top Performer: <strong>{{ top_performer.student.name }}</strong> — {{ top_performer.percentage }}%
+    </div>
+    {% endif %}
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><h5 class="mb-0">Student vs Marks</h5></div>
+                <div class="card-body"><canvas id="barChart" height="250"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><h5 class="mb-0">Pass vs Fail</h5></div>
+                <div class="card-body"><canvas id="pieChart" height="250"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><h5 class="mb-0">Monthly Attendance</h5></div>
+                <div class="card-body"><canvas id="lineChart" height="250"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">Top 5 Students</h5></div>
+                <ul class="list-group list-group-flush">
+                    {% for item in top_students %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>{{ forloop.counter }}. {{ item.student.name }}</span>
+                        <span class="badge bg-primary">{{ item.percentage }}%</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">No data available.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">Recent Exams</h5></div>
+                <ul class="list-group list-group-flush">
+                    {% for exam in recent_exams %}
+                    <li class="list-group-item">
+                        <strong>{{ exam.student.name }}</strong> — {{ exam.subject }}
+                        <br><small class="text-muted">{{ exam.exam_type }}: {{ exam.marks }}/{{ exam.max_marks }}</small>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">No recent exams.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white"><h5 class="mb-0">Recent Attendance</h5></div>
+                <ul class="list-group list-group-flush">
+                    {% for att in recent_attendance %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>{{ att.student.name }}</span>
+                        <span><small>{{ att.date }}</small> — {{ att.status }}</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">No recent attendance.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-2">
+        <div class="col-auto"><a href="{% url 'students:list' %}" class="btn btn-outline-primary">Manage Students</a></div>
+        <div class="col-auto"><a href="{% url 'marks:list' %}" class="btn btn-outline-primary">Marks Management</a></div>
+        <div class="col-auto"><a href="{% url 'attendance:list' %}" class="btn btn-outline-primary">Attendance Management</a></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const studentMarks = {{ chart_student_marks|safe }};
+const passFail = {{ chart_pass_fail|safe }};
+const attendanceTrend = {{ chart_attendance_trend|safe }};
+
+new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+        labels: studentMarks.map(d => d.name),
+        datasets: [{
+            label: 'Marks %',
+            data: studentMarks.map(d => d.percentage),
+            backgroundColor: 'rgba(13, 110, 253, 0.7)',
+        }]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
+});
+
+new Chart(document.getElementById('pieChart'), {
+    type: 'pie',
+    data: {
+        labels: ['Passed', 'Failed'],
+        datasets: [{
+            data: [passFail.passed, passFail.failed],
+            backgroundColor: ['#198754', '#dc3545'],
+        }]
+    },
+    options: { responsive: true }
+});
+
+new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+        labels: attendanceTrend.labels,
+        datasets: [{
+            label: 'Attendance %',
+            data: attendanceTrend.values,
+            borderColor: '#0dcaf0',
+            backgroundColor: 'rgba(13, 202, 240, 0.2)',
+            fill: true,
+            tension: 0.3,
+        }]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
+});
+</script>
+{% endblock %}
