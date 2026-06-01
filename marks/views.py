@@ -53,6 +53,7 @@ def marks_update(request, pk):
     return render(request, 'marks/marks_form.html', {
         'form': form,
         'title': 'Update Marks',
+        'record': record,
     })
 
 

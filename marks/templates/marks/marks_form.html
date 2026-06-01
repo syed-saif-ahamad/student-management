@@ -9,7 +9,10 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white"><h4 class="mb-0">{{ title }}</h4></div>
                 <div class="card-body">
-                    <form method="post" novalidate autocomplete="off">
+                    {# Store server-side values in data attributes to restore after browser autofill clears them #}
+                    <form method="post" novalidate autocomplete="off"
+                          data-marks="{{ form.marks.value|default:'' }}"
+                          data-max-marks="{{ form.max_marks.value|default:'' }}">
                         {% csrf_token %}
 
                         {# Student #}
@@ -64,4 +67,42 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/**
+ * Anti-autofill guard for marks form.
+ * Browsers ignore autocomplete="off" on number inputs and autofill based on
+ * field position/name history. This script restores the correct server-side
+ * values after the browser has had a chance to autofill (which happens after
+ * DOMContentLoaded in most browsers).
+ */
+(function () {
+    var form = document.querySelector('form[data-marks]');
+    if (!form) return;
+
+    var serverMarks    = form.getAttribute('data-marks');
+    var serverMaxMarks = form.getAttribute('data-max-marks');
+
+    var marksInput    = document.getElementById('id_marks_obtained');
+    var maxMarksInput = document.getElementById('id_marks_maximum');
+
+    function restoreValues() {
+        if (marksInput && serverMarks !== '') {
+            marksInput.value = serverMarks;
+        }
+        if (maxMarksInput && serverMaxMarks !== '') {
+            maxMarksInput.value = serverMaxMarks;
+        }
+    }
+
+    // Run immediately after DOM is ready
+    document.addEventListener('DOMContentLoaded', restoreValues);
+
+    // Run again after a short delay to catch late autofill (Chrome/Edge behaviour)
+    setTimeout(restoreValues, 300);
+    setTimeout(restoreValues, 800);
+})();
+</script>
 {% endblock %}

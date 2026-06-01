@@ -8,24 +8,41 @@ class MarksForm(forms.ModelForm):
         model = Marks
         fields = ['student', 'subject', 'exam_type', 'marks', 'max_marks', 'exam_date']
         widgets = {
-            'student': forms.Select(attrs={'class': 'form-select', 'id': 'id_marks_student'}),
-            'subject': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_marks_subject', 'autocomplete': 'off'}),
-            'exam_type': forms.Select(attrs={'class': 'form-select', 'id': 'id_marks_exam_type'}),
+            'student': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_marks_student',
+                'autocomplete': 'new-password',
+            }),
+            'subject': forms.TextInput(attrs={
+                'class': 'form-control',
+                'id': 'id_marks_subject',
+                'autocomplete': 'new-password',
+            }),
+            'exam_type': forms.Select(attrs={
+                'class': 'form-select',
+                'id': 'id_marks_exam_type',
+                'autocomplete': 'new-password',
+            }),
             'marks': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'id': 'id_marks_obtained',
                 'min': 0,
-                'autocomplete': 'off',
+                'autocomplete': 'new-password',
                 'placeholder': 'e.g. 75',
             }),
             'max_marks': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'id': 'id_marks_maximum',
                 'min': 1,
-                'autocomplete': 'off',
+                'autocomplete': 'new-password',
                 'placeholder': 'e.g. 100',
             }),
-            'exam_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'id': 'id_marks_exam_date', 'autocomplete': 'off'}),
+            'exam_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'id': 'id_marks_exam_date',
+                'autocomplete': 'new-password',
+            }),
         }
 
     def clean_marks(self):
