@@ -9,15 +9,51 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white"><h4 class="mb-0">{{ title }}</h4></div>
                 <div class="card-body">
-                    <form method="post" novalidate>
+                    <form method="post" novalidate autocomplete="off">
                         {% csrf_token %}
-                        {% for field in form %}
+
+                        {# Student #}
                         <div class="mb-3">
-                            <label class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+                            <label class="form-label" for="{{ form.student.id_for_label }}">{{ form.student.label }}</label>
+                            {{ form.student }}
+                            {% if form.student.errors %}<div class="text-danger small">{{ form.student.errors }}</div>{% endif %}
                         </div>
-                        {% endfor %}
+
+                        {# Subject #}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+                            {{ form.subject }}
+                            {% if form.subject.errors %}<div class="text-danger small">{{ form.subject.errors }}</div>{% endif %}
+                        </div>
+
+                        {# Exam Type #}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.exam_type.id_for_label }}">{{ form.exam_type.label }}</label>
+                            {{ form.exam_type }}
+                            {% if form.exam_type.errors %}<div class="text-danger small">{{ form.exam_type.errors }}</div>{% endif %}
+                        </div>
+
+                        {# Max Marks — entered BEFORE marks obtained to set context #}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.max_marks.id_for_label }}">{{ form.max_marks.label }}</label>
+                            {{ form.max_marks }}
+                            {% if form.max_marks.errors %}<div class="text-danger small">{{ form.max_marks.errors }}</div>{% endif %}
+                        </div>
+
+                        {# Marks Obtained #}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.marks.id_for_label }}">{{ form.marks.label }}</label>
+                            {{ form.marks }}
+                            {% if form.marks.errors %}<div class="text-danger small">{{ form.marks.errors }}</div>{% endif %}
+                        </div>
+
+                        {# Exam Date #}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.exam_date.id_for_label }}">{{ form.exam_date.label }}</label>
+                            {{ form.exam_date }}
+                            {% if form.exam_date.errors %}<div class="text-danger small">{{ form.exam_date.errors }}</div>{% endif %}
+                        </div>
+
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">Save</button>
                             <a href="{% url 'marks:list' %}" class="btn btn-secondary">Cancel</a>
