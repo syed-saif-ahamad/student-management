@@ -67,6 +67,104 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    {% if user.is_authenticated %}
+    <!-- Chatbot UI -->
+    <div class="chatbot-fab" id="chatbot-toggle" title="Chat with AI Assistant">
+        <i class="bi bi-chat-dots-fill"></i>
+    </div>
+
+    <div class="chatbot-panel" id="chatbot-panel">
+        <div class="chat-header">
+            <span><i class="bi bi-robot me-2"></i>AI Assistant</span>
+            <i class="bi bi-x-lg" style="cursor: pointer;" id="chatbot-close"></i>
+        </div>
+        <div class="chat-body" id="chat-body">
+            <div class="chat-message bot">
+                Hi {{ user.first_name|default:user.username }}! 👋 I'm your AI assistant. How can I help you today?
+            </div>
+            <div class="typing-indicator" id="typing-indicator">AI is typing...</div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." autocomplete="off">
+            <button class="chat-send-btn" id="chat-send-btn">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('chatbot-toggle');
+            const closeBtn = document.getElementById('chatbot-close');
+            const panel = document.getElementById('chatbot-panel');
+            const input = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('chat-send-btn');
+            const body = document.getElementById('chat-body');
+            const indicator = document.getElementById('typing-indicator');
+
+            function toggleChat() {
+                panel.classList.toggle('open');
+                if (panel.classList.contains('open')) {
+                    input.focus();
+                }
+            }
+
+            toggleBtn.addEventListener('click', toggleChat);
+            closeBtn.addEventListener('click', toggleChat);
+
+            function appendMessage(text, sender) {
+                const div = document.createElement('div');
+                div.className = `chat-message ${sender}`;
+                div.innerText = text;
+                // Insert before the typing indicator
+                body.insertBefore(div, indicator);
+                body.scrollTop = body.scrollHeight;
+            }
+
+            async function sendMessage() {
+                const message = input.value.trim();
+                if (!message) return;
+
+                appendMessage(message, 'user');
+                input.value = '';
+                indicator.style.display = 'block';
+                body.scrollTop = body.scrollHeight;
+
+                try {
+                    const response = await fetch('/chat/api/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ message: message })
+                    });
+                    
+                    const data = await response.json();
+                    indicator.style.display = 'none';
+                    
+                    if (response.ok) {
+                        appendMessage(data.reply, 'bot');
+                    } else {
+                        appendMessage('Sorry, an error occurred: ' + (data.error || 'Unknown error'), 'bot');
+                    }
+                } catch (error) {
+                    indicator.style.display = 'none';
+                    appendMessage('Network error. Please try again later.', 'bot');
+                }
+            }
+
+            sendBtn.addEventListener('click', sendMessage);
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
+    </script>
+    {% endif %}
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

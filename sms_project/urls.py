@@ -9,7 +9,8 @@ urlpatterns = [
     path('students/', include('students.urls')),
     path('attendance/', include('attendance.urls')),
     path('marks/', include('marks.urls')),
-    path('dashboard/', include('analytics_dashboard.urls')),
+    path('analytics/', include('analytics_dashboard.urls')),
+    path('chat/', include('chatbot.urls')),
 ]
 
 if settings.DEBUG:

@@ -11,8 +11,8 @@ class MarksForm(forms.ModelForm):
             'student': forms.Select(attrs={'class': 'form-select'}),
             'subject': forms.TextInput(attrs={'class': 'form-control'}),
             'exam_type': forms.Select(attrs={'class': 'form-select'}),
-            'marks': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
-            'max_marks': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
+            'marks': forms.NumberInput(attrs={'class': 'form-control', 'min': 0, 'autocomplete': 'off'}),
+            'max_marks': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'autocomplete': 'off'}),
             'exam_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
 

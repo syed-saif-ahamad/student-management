@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'attendance',
     'marks',
     'analytics_dashboard',
+    'chatbot',
 ]
 
 MIDDLEWARE = [
