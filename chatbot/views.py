@@ -24,10 +24,9 @@ def chat_api(request):
             # If no API key is set, return a mock response guiding the user
             if not api_key:
                 mock_response = (
-                    "I am the SMS Assistant! 🎓\n\n"
-                    "*(Note: The Gemini API key is currently missing from the environment variables. "
-                    "To enable real AI responses, please add GEMINI_API_KEY to your Vercel settings.)*\n\n"
-                    f"You said: '{user_message}'"
+                    "⚠️ **API Key Missing!**\n\n"
+                    "I cannot analyze or explain the meaning of your sentence because the `GEMINI_API_KEY` environment variable is not set.\n\n"
+                    "Please get a free API key from Google AI Studio and add it to your Vercel Environment Variables. Once added, I will be able to explain the meaning of: *" + user_message + "*"
                 )
                 return JsonResponse({'reply': mock_response})
             
@@ -36,10 +35,10 @@ def chat_api(request):
             
             # Construct a prompt giving the AI context about the user
             context_prompt = (
-                f"You are a helpful and professional chatbot assistant for a Student Management System (SMS). "
-                f"You are talking to a user named {request.user.username} "
-                f"(Role: {'Faculty' if request.user.groups.filter(name='Faculty').exists() else 'Student'}). "
-                f"Keep your answers concise and formatted nicely with markdown if appropriate. "
+                f"You are a helpful dictionary and language AI assistant. "
+                f"The user ({request.user.username}) will give you a prompt, word, or sentence. "
+                f"Your primary job is to explain the exact meaning of the particular input sentence or word they provide. "
+                f"Keep your answers concise, educational, and formatted nicely with markdown. "
                 f"The user says: {user_message}"
             )
             
