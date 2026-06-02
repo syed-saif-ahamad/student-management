@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Record Payment - SMS{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-cash-coin me-1"></i>Record Payment
+        </div>
+        <div class="card-body">
+          <div class="alert alert-secondary py-2 mb-3">
+            <strong>{{ fee_record.student.name }}</strong> ({{ fee_record.student.roll_no }})
+            &mdash; {{ fee_record.fee_structure.get_category_display }}
+            <br>
+            Due: <strong>₹{{ fee_record.amount_due|floatformat:2 }}</strong> &nbsp;|&nbsp;
+            Paid so far: <strong class="text-success">₹{{ fee_record.amount_paid|floatformat:2 }}</strong> &nbsp;|&nbsp;
+            Balance: <strong class="text-danger">₹{{ fee_record.balance|floatformat:2 }}</strong>
+          </div>
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+            </div>
+            {% endfor %}
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success">Record Payment</button>
+              <a href="{% url 'fees:detail' fee_record.pk %}" class="btn btn-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

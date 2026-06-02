@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Fee Structures - SMS{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-gear me-2"></i>Fee Structures</h2>
+    <div class="d-flex gap-2">
+      <a href="{% url 'fees:structure_create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Structure</a>
+      <a href="{% url 'fees:dashboard' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label text-muted small">Department</label>
+          <input type="text" name="department" class="form-control" placeholder="Department" value="{{ f_dept }}">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label text-muted small">Year</label>
+          <input type="number" name="year" class="form-control" placeholder="1-4" value="{{ f_year }}" min="1" max="4">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label text-muted small">Academic Year</label>
+          <select name="academic_year" class="form-select">
+            <option value="">All</option>
+            {% for ay in academic_years %}
+            <option value="{{ ay }}" {% if f_ay == ay %}selected{% endif %}>{{ ay }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2 align-items-end">
+          <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel"></i> Filter</button>
+          <a href="{% url 'fees:structure_list' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Department</th><th>Year</th><th>Category</th><th>Period</th>
+            <th>Amount</th><th>Academic Year</th><th>Due Date</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in structures %}
+          <tr>
+            <td class="fw-semibold">{{ s.department }}</td>
+            <td>Year {{ s.year }}</td>
+            <td><span class="badge bg-primary">{{ s.get_category_display }}</span></td>
+            <td>{{ s.period }}</td>
+            <td>₹{{ s.amount|floatformat:2 }}</td>
+            <td>{{ s.academic_year }}</td>
+            <td>{{ s.due_date }}</td>
+            <td>
+              <a href="{% url 'fees:structure_edit' s.pk %}" class="btn btn-sm btn-outline-warning py-0">Edit</a>
+              <a href="{% url 'fees:structure_delete' s.pk %}" class="btn btn-sm btn-outline-danger py-0">Delete</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-4"><i class="bi bi-inbox me-2"></i>No fee structures. <a href="{% url 'fees:structure_create' %}">Add one.</a></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

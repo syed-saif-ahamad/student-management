@@ -11,6 +11,7 @@ urlpatterns = [
     path('marks/', include('marks.urls')),
     path('analytics/', include('analytics_dashboard.urls')),
     path('chat/', include('chatbot.urls')),
+    path('fees/', include('fees.urls')),
 ]
 
 if settings.DEBUG:

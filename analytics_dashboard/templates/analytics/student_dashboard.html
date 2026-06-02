@@ -76,46 +76,39 @@
 
     <!-- Quick Action Cards -->
     <div class="row g-4 mb-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card shadow-sm h-100 border-primary border-2">
-                <div class="card-body text-center py-5">
-                    <div class="mb-3">
-                        <i class="bi bi-journal-text display-1 text-primary"></i>
-                    </div>
-                    <h4 class="card-title">View My Marks</h4>
-                    <p class="text-muted">
-                        View your complete marks history, subject-wise breakdown, and exam results.
-                    </p>
-                    <a href="{% url 'marks:my_marks' %}" class="btn btn-primary btn-lg">
-                        <i class="bi bi-arrow-right-circle me-2"></i>Go to Marks
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-journal-text display-1 text-primary"></i>
+                    <h4 class="card-title mt-3">My Marks</h4>
+                    <p class="text-muted">Subject-wise marks and exam results.</p>
+                    <a href="{% url 'marks:my_marks' %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-right-circle me-1"></i>View Marks
                     </a>
-                    <div class="mt-3">
-                        <span class="badge bg-secondary">
-                            <i class="bi bi-eye me-1"></i>Read-only Access
-                        </span>
-                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card shadow-sm h-100 border-success border-2">
-                <div class="card-body text-center py-5">
-                    <div class="mb-3">
-                        <i class="bi bi-calendar-check display-1 text-success"></i>
-                    </div>
-                    <h4 class="card-title">View My Attendance</h4>
-                    <p class="text-muted">
-                        Check your attendance records, monthly summaries, and attendance percentage.
-                    </p>
-                    <a href="{% url 'attendance:my_attendance' %}" class="btn btn-success btn-lg">
-                        <i class="bi bi-arrow-right-circle me-2"></i>Go to Attendance
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-calendar-check display-1 text-success"></i>
+                    <h4 class="card-title mt-3">My Attendance</h4>
+                    <p class="text-muted">Monthly summaries and attendance percentage.</p>
+                    <a href="{% url 'attendance:my_attendance' %}" class="btn btn-success">
+                        <i class="bi bi-arrow-right-circle me-1"></i>View Attendance
                     </a>
-                    <div class="mt-3">
-                        <span class="badge bg-secondary">
-                            <i class="bi bi-eye me-1"></i>Read-only Access
-                        </span>
-                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-warning border-2">
+                <div class="card-body text-center py-4">
+                    <i class="bi bi-cash-coin display-1 text-warning"></i>
+                    <h4 class="card-title mt-3">Fee Details</h4>
+                    <p class="text-muted">Tuition, hostel, transport and all fee categories.</p>
+                    <a href="{% url 'fees:my_fees' %}" class="btn btn-warning">
+                        <i class="bi bi-arrow-right-circle me-1"></i>View Fees
+                    </a>
                 </div>
             </div>
         </div>

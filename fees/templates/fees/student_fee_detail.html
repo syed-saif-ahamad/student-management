@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Fee Detail - SMS{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-receipt me-2"></i>Fee Detail</h2>
+    <div class="d-flex gap-2">
+      <a href="{% url 'fees:add_payment' fee_record.pk %}" class="btn btn-success">
+        <i class="bi bi-plus-circle me-1"></i>Record Payment
+      </a>
+      <a href="{% url 'fees:edit' fee_record.pk %}" class="btn btn-outline-warning">
+        <i class="bi bi-pencil me-1"></i>Edit
+      </a>
+      <a href="{% url 'fees:list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-5">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white fw-semibold">Fee Record</div>
+        <div class="card-body">
+          <table class="table table-borderless mb-0">
+            <tr><th class="text-muted" style="width:40%">Student</th><td><strong>{{ fee_record.student.name }}</strong></td></tr>
+            <tr><th class="text-muted">Roll No</th><td>{{ fee_record.student.roll_no }}</td></tr>
+            <tr><th class="text-muted">Department</th><td>{{ fee_record.student.department }}</td></tr>
+            <tr><th class="text-muted">Category</th><td>{{ fee_record.fee_structure.get_category_display }}</td></tr>
+            <tr><th class="text-muted">Period</th><td>{{ fee_record.fee_structure.period }}</td></tr>
+            <tr><th class="text-muted">Academic Year</th><td>{{ fee_record.fee_structure.academic_year }}</td></tr>
+            <tr><th class="text-muted">Due Date</th><td>{{ fee_record.due_date }}</td></tr>
+            <tr><th class="text-muted">Amount Due</th><td class="fw-bold">₹{{ fee_record.amount_due|floatformat:2 }}</td></tr>
+            <tr><th class="text-muted">Amount Paid</th><td class="text-success fw-bold">₹{{ fee_record.amount_paid|floatformat:2 }}</td></tr>
+            <tr><th class="text-muted">Balance</th>
+              <td class="fw-bold {% if fee_record.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                ₹{{ fee_record.balance|floatformat:2 }}
+              </td>
+            </tr>
+            <tr><th class="text-muted">Status</th>
+              <td>
+                <span class="badge fs-6
+                  {% if fee_record.status == 'Paid' %}bg-success
+                  {% elif fee_record.status == 'Partially Paid' %}bg-warning text-dark
+                  {% elif fee_record.status == 'Waived' %}bg-info text-dark
+                  {% else %}bg-danger{% endif %}">
+                  {{ fee_record.status }}
+                </span>
+              </td>
+            </tr>
+            {% if fee_record.remarks %}
+            <tr><th class="text-muted">Remarks</th><td>{{ fee_record.remarks }}</td></tr>
+            {% endif %}
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-clock-history me-1"></i>Payment History
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>#</th><th>Date</th><th>Amount</th><th>Mode</th><th>Reference</th><th>Received By</th></tr>
+            </thead>
+            <tbody>
+              {% for p in payments %}
+              <tr>
+                <td class="text-muted">{{ forloop.counter }}</td>
+                <td>{{ p.payment_date }}</td>
+                <td class="text-success fw-semibold">₹{{ p.amount|floatformat:2 }}</td>
+                <td><span class="badge bg-secondary">{{ p.mode }}</span></td>
+                <td>{{ p.reference_no|default:"—" }}</td>
+                <td>{{ p.received_by.username|default:"—" }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="6" class="text-center text-muted py-3">No payments recorded yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

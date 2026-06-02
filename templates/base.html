@@ -27,10 +27,12 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'students:list' %}">Students</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'attendance:list' %}">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'marks:list' %}">Marks</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'fees:dashboard' %}">Fees</a></li>
                     {% elif is_student_user %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'analytics:student_dashboard' %}">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'attendance:my_attendance' %}">Attendance</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'marks:my_marks' %}">Marks</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'fees:my_fees' %}">Fee Details</a></li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">

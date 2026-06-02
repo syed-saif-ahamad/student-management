@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'marks',
     'analytics_dashboard',
     'chatbot',
+    'fees',
 ]
 
 MIDDLEWARE = [

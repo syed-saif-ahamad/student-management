@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Fee Records - SMS{% endblock %}
+{% block content %}
+<div class="container-fluid px-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-list-check me-2"></i>Fee Records</h2>
+    <div class="d-flex gap-2">
+      <a href="{% url 'fees:create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Record</a>
+      <a href="{% url 'fees:dashboard' %}" class="btn btn-outline-secondary"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Filter card -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-2">
+          <label class="form-label text-muted small">Search</label>
+          <input type="text" name="q" class="form-control" placeholder="Name / Roll No" value="{{ q }}">
+        </div>
+        <div class="col-md-2">{{ form.student.label_tag }}<br>{{ form.student }}</div>
+        <div class="col-md-2">{{ form.category.label_tag }}<br>{{ form.category }}</div>
+        <div class="col-md-2">{{ form.status.label_tag }}<br>{{ form.status }}</div>
+        <div class="col-md-2">{{ form.department.label_tag }}<br>{{ form.department }}</div>
+        <div class="col-md-1">{{ form.year.label_tag }}<br>{{ form.year }}</div>
+        <div class="col-md-1 d-flex gap-1 align-items-end">
+          <button type="submit" class="btn btn-primary flex-grow-1"><i class="bi bi-funnel"></i></button>
+          <a href="{% url 'fees:list' %}" class="btn btn-outline-secondary"><i class="bi bi-x-lg"></i></a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Summary totals -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card shadow-sm border-start border-primary border-3">
+        <div class="card-body py-2">
+          <small class="text-muted">Total Due</small>
+          <div class="fw-bold text-primary">₹{{ total_due|floatformat:2 }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-start border-success border-3">
+        <div class="card-body py-2">
+          <small class="text-muted">Total Paid</small>
+          <div class="fw-bold text-success">₹{{ total_paid|floatformat:2 }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-start border-danger border-3">
+        <div class="card-body py-2">
+          <small class="text-muted">Outstanding Balance</small>
+          <div class="fw-bold text-danger">₹{{ total_bal|floatformat:2 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Student</th>
+            <th>Category</th>
+            <th>Period</th>
+            <th>Due Date</th>
+            <th>Amount Due</th>
+            <th>Amount Paid</th>
+            <th>Balance</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rec in records %}
+          <tr>
+            <td>
+              <strong>{{ rec.student.name }}</strong>
+              <br><span class="text-muted small">{{ rec.student.roll_no }} · {{ rec.student.department }}</span>
+            </td>
+            <td>{{ rec.fee_structure.get_category_display }}</td>
+            <td><span class="badge bg-secondary">{{ rec.fee_structure.period }}</span></td>
+            <td>{{ rec.due_date }}</td>
+            <td>₹{{ rec.amount_due|floatformat:2 }}</td>
+            <td class="text-success">₹{{ rec.amount_paid|floatformat:2 }}</td>
+            <td class="{% if rec.balance > 0 %}text-danger{% else %}text-success{% endif %} fw-semibold">
+              ₹{{ rec.balance|floatformat:2 }}
+            </td>
+            <td>
+              <span class="badge
+                {% if rec.status == 'Paid' %}bg-success
+                {% elif rec.status == 'Partially Paid' %}bg-warning text-dark
+                {% elif rec.status == 'Waived' %}bg-info text-dark
+                {% else %}bg-danger{% endif %}">
+                {{ rec.status }}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'fees:detail' rec.pk %}" class="btn btn-sm btn-outline-info py-0">View</a>
+              <a href="{% url 'fees:edit' rec.pk %}" class="btn btn-sm btn-outline-warning py-0">Edit</a>
+              <a href="{% url 'fees:add_payment' rec.pk %}" class="btn btn-sm btn-outline-success py-0">Pay</a>
+              <a href="{% url 'fees:delete' rec.pk %}" class="btn btn-sm btn-outline-danger py-0">Del</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="text-center text-muted py-4"><i class="bi bi-inbox me-2"></i>No records found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
