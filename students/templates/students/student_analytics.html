@@ -1,0 +1,443 @@
+{% extends 'base.html' %}
+{% block title %}Student Analytics - SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-bar-chart-line me-2"></i>Student Analytics</h2>
+    <a href="{% url 'students:list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-people me-1"></i>All Students
+    </a>
+  </div>
+
+  <!-- ═══════════════════ FILTER PANEL ═══════════════════ -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+      <i class="bi bi-funnel me-1"></i>Filter &amp; Analyse
+    </div>
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+
+        <div class="col-md-2">
+          <label class="form-label text-muted small">Department</label>
+          <select name="department" class="form-select">
+            <option value="">All Depts</option>
+            {% for d in all_departments %}
+            <option value="{{ d }}" {% if f_dept == d %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-1">
+          <label class="form-label text-muted small">Year</label>
+          <select name="year" class="form-select">
+            <option value="">All</option>
+            {% for y in all_years %}
+            <option value="{{ y }}" {% if f_year == y|stringformat:"s" %}selected{% endif %}>Year {{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label text-muted small">Backlog Status</label>
+          <select name="backlog" class="form-select">
+            <option value="">All</option>
+            <option value="yes" {% if f_backlog == 'yes' %}selected{% endif %}>Has Backlog</option>
+            <option value="no"  {% if f_backlog == 'no'  %}selected{% endif %}>No Backlog</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label text-muted small">Min Marks %</label>
+          <input type="number" name="min_marks" class="form-control"
+                 placeholder="e.g. 60" min="0" max="100"
+                 value="{{ f_min_marks }}">
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label text-muted small">Max Marks %</label>
+          <input type="number" name="max_marks" class="form-control"
+                 placeholder="e.g. 90" min="0" max="100"
+                 value="{{ f_max_marks }}">
+        </div>
+
+        <div class="col-md-1">
+          <label class="form-label text-muted small">Min Att %</label>
+          <input type="number" name="min_att" class="form-control"
+                 placeholder="75" min="0" max="100"
+                 value="{{ f_min_att }}">
+        </div>
+
+        <div class="col-md-1">
+          <label class="form-label text-muted small">Sort by</label>
+          <select name="sort" class="form-select">
+            <option value="name"    {% if f_sort == 'name'    %}selected{% endif %}>Name</option>
+            <option value="marks"   {% if f_sort == 'marks'   %}selected{% endif %}>Marks ↓</option>
+            <option value="att"     {% if f_sort == 'att'     %}selected{% endif %}>Attendance ↓</option>
+            <option value="backlogs"{% if f_sort == 'backlogs'%}selected{% endif %}>Backlogs ↓</option>
+          </select>
+        </div>
+
+        <div class="col-md-1 d-flex gap-1">
+          <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="bi bi-search"></i>
+          </button>
+          <a href="{% url 'students:analytics' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-lg"></i>
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ SUMMARY CARDS ═══════════════════ -->
+  <div class="row g-3 mb-4">
+
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm h-100 border-start border-primary border-4">
+        <div class="card-body">
+          <div class="text-muted small text-uppercase">Total Students</div>
+          <div class="display-6 fw-bold">{{ total_students }}</div>
+          {% if filters_active %}
+          <div class="text-muted small">matching filters</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm h-100 border-start border-success border-4">
+        <div class="card-body">
+          <div class="text-muted small text-uppercase">Avg Marks</div>
+          <div class="display-6 fw-bold
+            {% if avg_marks >= 75 %}text-success
+            {% elif avg_marks >= 50 %}text-warning
+            {% else %}text-danger{% endif %}">
+            {{ avg_marks }}%
+          </div>
+          <div class="text-muted small">Pass threshold: {{ pass_threshold }}%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm h-100 border-start border-danger border-4">
+        <div class="card-body">
+          <div class="text-muted small text-uppercase">Students with Backlogs</div>
+          <div class="display-6 fw-bold text-danger">{{ with_backlogs }}</div>
+          {% if total_students > 0 %}
+          <div class="text-muted small">
+            {% widthratio with_backlogs total_students 100 %}% of filtered
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm h-100 border-start border-info border-4">
+        <div class="card-body">
+          <div class="text-muted small text-uppercase">Avg Attendance</div>
+          <div class="display-6 fw-bold
+            {% if avg_att >= 75 %}text-success
+            {% elif avg_att >= 50 %}text-warning
+            {% else %}text-danger{% endif %}">
+            {{ avg_att }}%
+          </div>
+          <div class="text-muted small">across filtered students</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row g-4 mb-4">
+
+    <!-- ═══════════════ TOP PERFORMERS ═══════════════ -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-trophy-fill text-warning me-1"></i>Top Scorers
+        </div>
+        {% if top_scorers %}
+        <ul class="list-group list-group-flush">
+          {% for row in top_scorers %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge bg-warning text-dark me-2">{{ forloop.counter }}</span>
+              <strong>{{ row.student.name }}</strong>
+              <span class="text-muted small ms-2">{{ row.student.roll_no }}</span>
+              <br>
+              <span class="text-muted small ms-4">
+                {{ row.student.department }} · Year {{ row.student.year }}
+              </span>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success fs-6">{{ row.overall_pct }}%</span>
+              <br>
+              <small class="text-muted">{{ row.total_marks }}/{{ row.total_max }}</small>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="card-body text-muted text-center py-4">
+          <i class="bi bi-inbox me-2"></i>No marks data available.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ═══════════════ SECTION-WISE STRENGTH ═══════════════ -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-building me-1"></i>Section-wise Strength &amp; Performance
+        </div>
+        {% if section_stats %}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Department</th>
+                <th>Year</th>
+                <th>Students</th>
+                <th>Avg Marks</th>
+                <th>Avg Att</th>
+                <th>Backlogs</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sec in section_stats %}
+              <tr>
+                <td class="fw-semibold">{{ sec.department }}</td>
+                <td>Year {{ sec.year }}</td>
+                <td>
+                  <span class="badge bg-primary">{{ sec.total }}</span>
+                </td>
+                <td>
+                  {% if sec.avg_marks is not None %}
+                  <span class="badge
+                    {% if sec.avg_marks >= 75 %}bg-success
+                    {% elif sec.avg_marks >= pass_threshold %}bg-warning text-dark
+                    {% else %}bg-danger{% endif %}">
+                    {{ sec.avg_marks }}%
+                  </span>
+                  {% else %}
+                  <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge
+                    {% if sec.avg_att >= 75 %}bg-success
+                    {% elif sec.avg_att >= 50 %}bg-warning text-dark
+                    {% else %}bg-danger{% endif %}">
+                    {{ sec.avg_att }}%
+                  </span>
+                </td>
+                <td>
+                  {% if sec.with_backlog > 0 %}
+                  <span class="badge bg-danger">{{ sec.with_backlog }}</span>
+                  {% else %}
+                  <span class="badge bg-secondary">0</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="?department={{ sec.department }}&year={{ sec.year }}"
+                     class="btn btn-sm btn-outline-secondary py-0">Filter</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="card-body text-muted text-center py-4">
+          <i class="bi bi-inbox me-2"></i>No sections match the current filter.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════ STUDENTS WITH BACKLOGS ═══════════════════ -->
+  {% with backlog_students=filtered|dictsortreversed:"backlog_count" %}
+  {% if backlog_students %}
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+      <span><i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>Students with Backlogs</span>
+      <a href="?backlog=yes{% if f_dept %}&department={{ f_dept }}{% endif %}{% if f_year %}&year={{ f_year }}{% endif %}"
+         class="btn btn-sm btn-outline-danger py-0">Show Only Backlogs</a>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Roll No</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Year</th>
+            <th>Overall %</th>
+            <th>Backlogs</th>
+            <th>Att %</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in backlog_students %}
+          {% if row.has_backlog %}
+          <tr class="table-danger">
+            <td><span class="badge bg-secondary">{{ row.student.roll_no }}</span></td>
+            <td class="fw-semibold">{{ row.student.name }}</td>
+            <td>{{ row.student.department }}</td>
+            <td>Year {{ row.student.year }}</td>
+            <td>
+              {% if row.overall_pct is not None %}
+              <span class="badge bg-danger">{{ row.overall_pct }}%</span>
+              {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            <td>
+              <span class="badge bg-danger me-1">{{ row.backlog_count }}</span>
+              <span class="text-muted small">
+                {{ row.backlogs|join:", "|truncatechars:60 }}
+              </span>
+            </td>
+            <td>
+              <span class="badge
+                {% if row.att_pct >= 75 %}bg-success
+                {% elif row.att_pct >= 50 %}bg-warning text-dark
+                {% else %}bg-danger{% endif %}">
+                {{ row.att_pct }}%
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'students:detail' row.student.pk %}"
+                 class="btn btn-sm btn-outline-secondary py-0">View</a>
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- ═══════════════════ FULL FILTERED TABLE ═══════════════════ -->
+  <div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">
+        <i class="bi bi-table me-1"></i>All Filtered Students
+        <span class="badge bg-secondary ms-2">{{ total_students }}</span>
+      </span>
+      <div class="d-flex gap-2 small text-muted align-items-center">
+        <span>Sort:</span>
+        <a href="?{% if f_dept %}department={{ f_dept }}&{% endif %}{% if f_year %}year={{ f_year }}&{% endif %}{% if f_backlog %}backlog={{ f_backlog }}&{% endif %}{% if f_min_marks %}min_marks={{ f_min_marks }}&{% endif %}{% if f_max_marks %}max_marks={{ f_max_marks }}&{% endif %}{% if f_min_att %}min_att={{ f_min_att }}&{% endif %}sort=marks"
+           class="btn btn-sm {% if f_sort == 'marks' %}btn-primary{% else %}btn-outline-secondary{% endif %} py-0">Marks</a>
+        <a href="?{% if f_dept %}department={{ f_dept }}&{% endif %}{% if f_year %}year={{ f_year }}&{% endif %}{% if f_backlog %}backlog={{ f_backlog }}&{% endif %}{% if f_min_marks %}min_marks={{ f_min_marks }}&{% endif %}{% if f_max_marks %}max_marks={{ f_max_marks }}&{% endif %}{% if f_min_att %}min_att={{ f_min_att }}&{% endif %}sort=att"
+           class="btn btn-sm {% if f_sort == 'att' %}btn-primary{% else %}btn-outline-secondary{% endif %} py-0">Attendance</a>
+        <a href="?{% if f_dept %}department={{ f_dept }}&{% endif %}{% if f_year %}year={{ f_year }}&{% endif %}{% if f_backlog %}backlog={{ f_backlog }}&{% endif %}{% if f_min_marks %}min_marks={{ f_min_marks }}&{% endif %}{% if f_max_marks %}max_marks={{ f_max_marks }}&{% endif %}{% if f_min_att %}min_att={{ f_min_att }}&{% endif %}sort=name"
+           class="btn btn-sm {% if f_sort == 'name' %}btn-primary{% else %}btn-outline-secondary{% endif %} py-0">Name</a>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Roll No</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Year</th>
+            <th>Overall Marks</th>
+            <th>Attendance</th>
+            <th>Backlogs</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in filtered %}
+          <tr class="{% if row.has_backlog %}table-warning{% endif %}">
+            <td class="text-muted">{{ forloop.counter }}</td>
+            <td><span class="badge bg-secondary">{{ row.student.roll_no }}</span></td>
+            <td class="fw-semibold">{{ row.student.name }}</td>
+            <td>{{ row.student.department }}</td>
+            <td>Year {{ row.student.year }}</td>
+            <td>
+              {% if row.overall_pct is not None %}
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:6px;min-width:60px">
+                  <div class="progress-bar
+                    {% if row.overall_pct >= 75 %}bg-success
+                    {% elif row.overall_pct >= pass_threshold %}bg-warning
+                    {% else %}bg-danger{% endif %}"
+                    style="width:{{ row.overall_pct }}%"></div>
+                </div>
+                <span class="small fw-semibold
+                  {% if row.overall_pct >= 75 %}text-success
+                  {% elif row.overall_pct >= pass_threshold %}text-warning
+                  {% else %}text-danger{% endif %}">
+                  {{ row.overall_pct }}%
+                </span>
+              </div>
+              {% else %}
+              <span class="text-muted small">No marks</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge
+                {% if row.att_pct >= 75 %}bg-success
+                {% elif row.att_pct >= 50 %}bg-warning text-dark
+                {% else %}bg-danger{% endif %}">
+                {{ row.att_pct }}%
+              </span>
+            </td>
+            <td>
+              {% if row.backlog_count > 0 %}
+              <span class="badge bg-danger" title="{{ row.backlogs|join:', ' }}">
+                {{ row.backlog_count }} backlog{{ row.backlog_count|pluralize }}
+              </span>
+              {% else %}
+              <span class="badge bg-success">Clear</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.overall_pct is not None %}
+                {% if row.overall_pct >= 75 and not row.has_backlog %}
+                <span class="badge bg-success">Good</span>
+                {% elif row.has_backlog %}
+                <span class="badge bg-danger">At Risk</span>
+                {% else %}
+                <span class="badge bg-warning text-dark">Average</span>
+                {% endif %}
+              {% else %}
+              <span class="badge bg-secondary">No Data</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'students:detail' row.student.pk %}"
+                 class="btn btn-sm btn-outline-info py-0">View</a>
+              <a href="{% url 'marks:list' %}?student={{ row.student.pk }}"
+                 class="btn btn-sm btn-outline-secondary py-0">Marks</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" class="text-center text-muted py-4">
+              <i class="bi bi-inbox me-2"></i>No students match the current filters.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -6,6 +6,7 @@ app_name = 'students'
 
 urlpatterns = [
     path('', views.student_list, name='list'),
+    path('analytics/', views.student_analytics, name='analytics'),
     path('add/', views.student_create, name='create'),
     path('<int:pk>/', views.student_detail, name='detail'),
     path('<int:pk>/edit/', views.student_update, name='update'),
