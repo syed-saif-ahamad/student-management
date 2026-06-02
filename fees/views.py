@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal
 
 from django.contrib import messages
@@ -152,13 +153,19 @@ def fee_structure_delete(request, pk):
 @faculty_required
 def student_fee_create(request):
     form = StudentFeeForm(request.POST or None)
+    has_structures = FeeStructure.objects.exists()
     if request.method == 'POST' and form.is_valid():
         obj = form.save(commit=False)
         obj.updated_by = request.user
         obj.save()
         messages.success(request, f'Fee record created for {obj.student.name}.')
         return redirect('fees:list')
-    return render(request, 'fees/student_fee_form.html', {'form': form, 'title': 'Add Fee Record'})
+    return render(request, 'fees/student_fee_form.html', {
+        'form': form,
+        'title': 'Add Fee Record',
+        'has_structures': has_structures,
+        'structure_data': json.dumps(form.structure_data),
+    })
 
 
 @faculty_required
@@ -171,7 +178,13 @@ def student_fee_edit(request, pk):
         updated.save()
         messages.success(request, 'Fee record updated.')
         return redirect('fees:list')
-    return render(request, 'fees/student_fee_form.html', {'form': form, 'title': 'Edit Fee Record', 'obj': obj})
+    return render(request, 'fees/student_fee_form.html', {
+        'form': form,
+        'title': 'Edit Fee Record',
+        'obj': obj,
+        'has_structures': True,
+        'structure_data': json.dumps(form.structure_data),
+    })
 
 
 @faculty_required

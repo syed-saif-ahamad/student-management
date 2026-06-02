@@ -1,29 +1,155 @@
 {% extends 'base.html' %}
 {% block title %}{{ title }} - SMS{% endblock %}
+
 {% block content %}
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-lg-7">
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="bi bi-gear me-2"></i>{{ title }}</h4>
+        <a href="{% url 'fees:structure_list' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+      </div>
+
       <div class="card shadow-sm">
-        <div class="card-header bg-white"><h4 class="mb-0">{{ title }}</h4></div>
+        <div class="card-header bg-white fw-semibold">Fee Structure Details</div>
         <div class="card-body">
+
+          <div class="alert alert-info py-2 mb-4">
+            <i class="bi bi-lightbulb me-1"></i>
+            A <strong>Fee Structure</strong> defines a fee type for a specific
+            department and year. After creating structures, use
+            <strong>Add Fee Record</strong> to assign them to individual students.
+          </div>
+
           <form method="post" novalidate>
             {% csrf_token %}
-            {% for field in form %}
-            <div class="mb-3">
-              <label class="form-label fw-semibold">{{ field.label }}</label>
-              {{ field }}
-              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-              {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+
+            <div class="row g-3">
+
+              <!-- Department -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold" for="{{ form.department.id_for_label }}">
+                  {{ form.department.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.department }}
+                {% if form.department.errors %}
+                  <div class="text-danger small mt-1">{{ form.department.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Year -->
+              <div class="col-md-3">
+                <label class="form-label fw-semibold" for="{{ form.year.id_for_label }}">
+                  {{ form.year.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.year }}
+                {% if form.year.errors %}
+                  <div class="text-danger small mt-1">{{ form.year.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Academic Year -->
+              <div class="col-md-3">
+                <label class="form-label fw-semibold" for="{{ form.academic_year.id_for_label }}">
+                  {{ form.academic_year.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.academic_year }}
+                {% if form.academic_year.help_text %}
+                  <div class="form-text">{{ form.academic_year.help_text }}</div>
+                {% endif %}
+                {% if form.academic_year.errors %}
+                  <div class="text-danger small mt-1">{{ form.academic_year.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Category -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold" for="{{ form.category.id_for_label }}">
+                  {{ form.category.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                  <div class="text-danger small mt-1">{{ form.category.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Period -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold" for="{{ form.period.id_for_label }}">
+                  {{ form.period.label }}
+                </label>
+                {{ form.period }}
+                {% if form.period.errors %}
+                  <div class="text-danger small mt-1">{{ form.period.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Amount -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold" for="{{ form.amount.id_for_label }}">
+                  {{ form.amount.label }} <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">₹</span>
+                  {{ form.amount }}
+                </div>
+                {% if form.amount.errors %}
+                  <div class="text-danger small mt-1">{{ form.amount.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Due Date -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold" for="{{ form.due_date.id_for_label }}">
+                  {{ form.due_date.label }} <span class="text-danger">*</span>
+                </label>
+                {{ form.due_date }}
+                {% if form.due_date.errors %}
+                  <div class="text-danger small mt-1">{{ form.due_date.errors }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Description -->
+              <div class="col-12">
+                <label class="form-label fw-semibold" for="{{ form.description.id_for_label }}">
+                  {{ form.description.label }}
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                  <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+                {% endif %}
+              </div>
+
             </div>
-            {% endfor %}
-            <div class="d-flex gap-2">
-              <button type="submit" class="btn btn-primary">Save</button>
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-save me-1"></i>Save Fee Structure
+              </button>
               <a href="{% url 'fees:structure_list' %}" class="btn btn-secondary">Cancel</a>
             </div>
+
           </form>
         </div>
       </div>
+
+      <!-- Quick tip: what to do next -->
+      {% if not obj %}
+      <div class="card shadow-sm mt-3 border-success">
+        <div class="card-body py-2">
+          <small class="text-muted">
+            <i class="bi bi-arrow-right-circle text-success me-1"></i>
+            After saving, go to
+            <a href="{% url 'fees:create' %}">Add Fee Record</a>
+            to assign this structure to individual students.
+          </small>
+        </div>
+      </div>
+      {% endif %}
+
     </div>
   </div>
 </div>

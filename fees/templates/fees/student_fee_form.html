@@ -1,34 +1,217 @@
 {% extends 'base.html' %}
 {% block title %}{{ title }} - SMS{% endblock %}
+
 {% block content %}
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-lg-7">
+
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4><i class="bi bi-cash-coin me-2"></i>{{ title }}</h4>
+        <a href="{% url 'fees:list' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+      </div>
+
+      {% if not has_structures %}
+      <!-- No fee structures exist yet — guide faculty to create one first -->
+      <div class="alert alert-warning">
+        <h5 class="alert-heading">
+          <i class="bi bi-exclamation-triangle me-2"></i>No Fee Structures Found
+        </h5>
+        <p class="mb-2">
+          Before assigning fees to students, you must first create at least one
+          <strong>Fee Structure</strong> (e.g. Tuition Fee for CS Year 2 — ₹45,000).
+        </p>
+        <a href="{% url 'fees:structure_create' %}" class="btn btn-warning">
+          <i class="bi bi-plus-lg me-1"></i>Create a Fee Structure now
+        </a>
+      </div>
+      {% endif %}
+
       <div class="card shadow-sm">
-        <div class="card-header bg-white"><h4 class="mb-0">{{ title }}</h4></div>
+        <div class="card-header bg-white fw-semibold">
+          <i class="bi bi-person-vcard me-1"></i>Fee Record Details
+        </div>
         <div class="card-body">
-          <div class="alert alert-info py-2 mb-3">
-            <i class="bi bi-info-circle me-1"></i>
-            Select a student and a fee structure. Amount due will be pre-filled from the structure.
-            Status is auto-computed from paid amount.
+
+          <div class="alert alert-info py-2 mb-4">
+            <i class="bi bi-lightbulb me-1"></i>
+            <strong>How it works:</strong>
+            Select a student, then pick a fee structure from the dropdown.
+            The <em>Amount Due</em> and <em>Due Date</em> will be filled in automatically — you can still edit them if needed.
           </div>
-          <form method="post" novalidate>
+
+          <form method="post" novalidate id="studentFeeForm">
             {% csrf_token %}
-            {% for field in form %}
+
+            <!-- Student -->
             <div class="mb-3">
-              <label class="form-label fw-semibold">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+              <label class="form-label fw-semibold" for="{{ form.student.id_for_label }}">
+                {{ form.student.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.student }}
+              {% if form.student.errors %}
+                <div class="text-danger small mt-1">{{ form.student.errors }}</div>
+              {% endif %}
             </div>
-            {% endfor %}
+
+            <!-- Fee Structure -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ form.fee_structure.id_for_label }}">
+                {{ form.fee_structure.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.fee_structure }}
+              {% if form.fee_structure.errors %}
+                <div class="text-danger small mt-1">{{ form.fee_structure.errors }}</div>
+              {% endif %}
+              {% if not has_structures %}
+                <div class="form-text text-warning">
+                  <i class="bi bi-exclamation-circle me-1"></i>
+                  No structures available.
+                  <a href="{% url 'fees:structure_create' %}">Add a fee structure</a> first.
+                </div>
+              {% else %}
+                <div class="form-text text-muted">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Selecting a structure auto-fills Amount Due and Due Date.
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Amount Due (auto-filled, editable) -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ form.amount_due.id_for_label }}">
+                {{ form.amount_due.label }} <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                {{ form.amount_due }}
+              </div>
+              {% if form.amount_due.errors %}
+                <div class="text-danger small mt-1">{{ form.amount_due.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Amount Paid -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ form.amount_paid.id_for_label }}">
+                {{ form.amount_paid.label }}
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                {{ form.amount_paid }}
+              </div>
+              {% if form.amount_paid.errors %}
+                <div class="text-danger small mt-1">{{ form.amount_paid.errors }}</div>
+              {% endif %}
+              <div class="form-text text-muted">Enter 0 if no payment has been made yet.</div>
+            </div>
+
+            <!-- Due Date (auto-filled, editable) -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ form.due_date.id_for_label }}">
+                {{ form.due_date.label }} <span class="text-danger">*</span>
+              </label>
+              {{ form.due_date }}
+              {% if form.due_date.errors %}
+                <div class="text-danger small mt-1">{{ form.due_date.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Remarks -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold" for="{{ form.remarks.id_for_label }}">
+                {{ form.remarks.label }}
+              </label>
+              {{ form.remarks }}
+            </div>
+
+            <!-- Status preview -->
+            <div class="mb-4 p-3 bg-light rounded">
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                <strong>Note:</strong> Payment status (Pending / Partially Paid / Paid) is
+                computed automatically from the amounts when you save.
+              </small>
+            </div>
+
             <div class="d-flex gap-2">
-              <button type="submit" class="btn btn-primary">Save</button>
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-save me-1"></i>Save
+              </button>
               <a href="{% url 'fees:list' %}" class="btn btn-secondary">Cancel</a>
+              {% if not has_structures %}
+              <a href="{% url 'fees:structure_create' %}" class="btn btn-warning ms-auto">
+                <i class="bi bi-plus-lg me-1"></i>Create Fee Structure First
+              </a>
+              {% endif %}
             </div>
+
           </form>
         </div>
       </div>
+
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Structure data from Django view — maps structure ID to {amount, due_date}
+var structureData = {{ structure_data|safe }};
+
+var structureSelect = document.getElementById('id_fee_structure');
+var amountDueInput  = document.getElementById('id_amount_due');
+var dueDateInput    = document.getElementById('id_due_date');
+
+function fillFromStructure() {
+    var selectedId = structureSelect ? structureSelect.value : '';
+    if (selectedId && structureData[selectedId]) {
+        var data = structureData[selectedId];
+        // Only auto-fill if the field is currently empty (don't overwrite edited values on load)
+        if (amountDueInput && !amountDueInput.dataset.userEdited) {
+            amountDueInput.value = data.amount;
+        }
+        if (dueDateInput && !dueDateInput.dataset.userEdited) {
+            dueDateInput.value = data.due_date;
+        }
+    }
+}
+
+// Mark fields as user-edited once the user manually touches them
+if (amountDueInput) {
+    amountDueInput.addEventListener('input', function() {
+        this.dataset.userEdited = '1';
+    });
+}
+if (dueDateInput) {
+    dueDateInput.addEventListener('input', function() {
+        this.dataset.userEdited = '1';
+    });
+}
+
+// Auto-fill when structure selection changes — always fill on change
+if (structureSelect) {
+    structureSelect.addEventListener('change', function() {
+        // Reset user-edited flags on structure change
+        if (amountDueInput) delete amountDueInput.dataset.userEdited;
+        if (dueDateInput)   delete dueDateInput.dataset.userEdited;
+        fillFromStructure();
+    });
+    // Also run on page load if a structure is already selected (edit mode)
+    document.addEventListener('DOMContentLoaded', function() {
+        // On edit mode the fields are already populated from the instance,
+        // so mark them as user-edited to prevent overwrite
+        if (amountDueInput && amountDueInput.value) {
+            amountDueInput.dataset.userEdited = '1';
+        }
+        if (dueDateInput && dueDateInput.value) {
+            dueDateInput.dataset.userEdited = '1';
+        }
+        fillFromStructure();
+    });
+}
+</script>
 {% endblock %}
