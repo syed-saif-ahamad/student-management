@@ -4,13 +4,15 @@
 
 {% block content %}
 <div class="container-fluid px-4">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-person-badge me-2"></i>Student Dashboard</h2>
+        <h2><i class="bi bi-person-badge me-2"></i>Welcome, {{ student.name }}!</h2>
         <a href="{% url 'analytics:download_report' %}" class="btn btn-outline-primary">
             <i class="bi bi-download me-1"></i>Download Report
         </a>
     </div>
 
+    <!-- Student info card -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <div class="row">
@@ -22,109 +24,120 @@
         </div>
     </div>
 
+    <!-- Summary stat cards -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card stat-card shadow-sm border-start border-success border-4">
+            <div class="card stat-card shadow-sm border-start border-success border-4 h-100">
                 <div class="card-body">
                     <h6 class="text-muted">Attendance</h6>
-                    <h2>{{ attendance_pct }}%</h2>
+                    <h2 class="
+                        {% if attendance_pct >= 75 %}text-success
+                        {% elif attendance_pct >= 50 %}text-warning
+                        {% else %}text-danger{% endif %}">
+                        {{ attendance_pct }}%
+                    </h2>
+                    <small class="text-muted">Overall attendance rate</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card stat-card shadow-sm border-start border-primary border-4">
+            <div class="card stat-card shadow-sm border-start border-primary border-4 h-100">
                 <div class="card-body">
                     <h6 class="text-muted">Current Marks</h6>
-                    <h2>{{ current_pct }}%</h2>
+                    <h2 class="
+                        {% if current_pct >= 75 %}text-success
+                        {% elif current_pct >= 40 %}text-warning
+                        {% else %}text-danger{% endif %}">
+                        {{ current_pct }}%
+                    </h2>
+                    <small class="text-muted">Average across all exams</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card stat-card shadow-sm border-start border-info border-4">
+            <div class="card stat-card shadow-sm border-start border-info border-4 h-100">
                 <div class="card-body">
                     <h6 class="text-muted">Predicted Final Score</h6>
-                    <h2>{{ prediction }}%</h2>
+                    <h2 class="text-info">{{ prediction }}%</h2>
+                    <small class="text-muted">AI prediction</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card stat-card shadow-sm border-start border-warning border-4">
+            <div class="card stat-card shadow-sm border-start border-warning border-4 h-100">
                 <div class="card-body">
                     <h6 class="text-muted">Total Exams</h6>
-                    <h2>{{ records.count }}</h2>
+                    <h2 class="text-warning">{{ records.count }}</h2>
+                    <small class="text-muted">Completed exams</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white"><h5 class="mb-0">Performance Graph</h5></div>
-                <div class="card-body"><canvas id="performanceChart" height="200"></canvas></div>
+    <!-- Quick Action Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100 border-primary border-2">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3">
+                        <i class="bi bi-journal-text display-1 text-primary"></i>
+                    </div>
+                    <h4 class="card-title">View My Marks</h4>
+                    <p class="text-muted">
+                        View your complete marks history, subject-wise breakdown, and exam results.
+                    </p>
+                    <a href="{% url 'marks:my_marks' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-arrow-right-circle me-2"></i>Go to Marks
+                    </a>
+                    <div class="mt-3">
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-eye me-1"></i>Read-only Access
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-lg-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Exam History</h5>
-                    <a href="{% url 'marks:my_marks' %}" class="btn btn-sm btn-outline-primary py-0">
-                        View All
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100 border-success border-2">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3">
+                        <i class="bi bi-calendar-check display-1 text-success"></i>
+                    </div>
+                    <h4 class="card-title">View My Attendance</h4>
+                    <p class="text-muted">
+                        Check your attendance records, monthly summaries, and attendance percentage.
+                    </p>
+                    <a href="{% url 'attendance:my_attendance' %}" class="btn btn-success btn-lg">
+                        <i class="bi bi-arrow-right-circle me-2"></i>Go to Attendance
                     </a>
+                    <div class="mt-3">
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-eye me-1"></i>Read-only Access
+                        </span>
+                    </div>
                 </div>
-                <ul class="list-group list-group-flush">
-                    {% for record in records %}
-                    <li class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <strong>{{ record.subject }}</strong>
-                                <span class="badge bg-secondary ms-1">{{ record.exam_type }}</span>
-                                <br>
-                                <small class="text-muted">{{ record.exam_date }}</small>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge
-                                    {% if record.percentage >= 75 %}bg-success
-                                    {% elif record.percentage >= 40 %}bg-warning text-dark
-                                    {% else %}bg-danger{% endif %}">
-                                    {{ record.marks }}/{{ record.max_marks }}
-                                </span>
-                                <br>
-                                <small class="text-muted">{{ record.percentage }}%</small>
-                            </div>
-                        </div>
-                        {% if record.updated_by %}
-                        <div class="text-muted mt-1" style="font-size:0.72rem">
-                            <i class="bi bi-clock me-1"></i>Updated {{ record.updated_at|date:"d M Y" }}
-                        </div>
-                        {% endif %}
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item text-muted">No exam records.</li>
-                    {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Important notices -->
+    <div class="row g-3">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <h5 class="alert-heading">
+                    <i class="bi bi-info-circle me-2"></i>Important Information
+                </h5>
+                <hr>
+                <ul class="mb-0">
+                    <li><strong>Marks</strong> are managed exclusively by faculty members. You have view-only access.</li>
+                    <li><strong>Attendance</strong> is recorded by faculty. Contact your faculty if you notice any discrepancies.</li>
+                    <li>Use the <strong>Download Report</strong> button above to save a complete academic report.</li>
+                    <li>Your data is updated in real-time whenever faculty makes changes.</li>
                 </ul>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-new Chart(document.getElementById('performanceChart'), {
-    type: 'line',
-    data: {
-        labels: {{ performance_labels|safe }},
-        datasets: [{
-            label: 'Score %',
-            data: {{ performance_values|safe }},
-            borderColor: '#0d6efd',
-            backgroundColor: 'rgba(13, 110, 253, 0.15)',
-            fill: true,
-            tension: 0.3,
-        }]
-    },
-    options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } }
-});
-</script>
+</div>
 {% endblock %}
