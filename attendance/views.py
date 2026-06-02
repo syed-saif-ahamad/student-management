@@ -49,6 +49,90 @@ def attendance_list(request):
 
 
 @faculty_required
+def attendance_by_date(request):
+    """
+    Dedicated date-view: faculty picks a date and sees every student's
+    attendance for that day — including students with no record yet.
+    Shows Present / Absent / Late counts and per-department breakdown.
+    """
+    selected_date = request.GET.get('date', '')
+    dept_filter   = request.GET.get('department', '')
+
+    # All distinct dates that have records — used to populate a "jump to date" list
+    available_dates = (
+        Attendance.objects
+        .values_list('date', flat=True)
+        .distinct()
+        .order_by('-date')
+    )
+
+    departments = (
+        Student.objects
+        .values_list('department', flat=True)
+        .distinct()
+        .order_by('department')
+    )
+
+    rows = []
+    stats = {'present': 0, 'absent': 0, 'late': 0, 'total': 0, 'no_record': 0}
+    dept_stats = {}           # {dept: {present, absent, late, total}}
+
+    if selected_date:
+        students_qs = Student.objects.all().order_by('department', 'roll_no')
+        if dept_filter:
+            students_qs = students_qs.filter(department=dept_filter)
+
+        # Fetch all attendance for the selected date in one DB hit
+        att_map = {
+            rec.student_id: rec
+            for rec in Attendance.objects.filter(date=selected_date, student__in=students_qs)
+        }
+
+        for student in students_qs:
+            rec = att_map.get(student.pk)
+            status = rec.status if rec else None
+            rows.append({
+                'student': student,
+                'record':  rec,
+                'status':  status,
+            })
+
+            # aggregate stats
+            stats['total'] += 1
+            dept = student.department
+            dept_stats.setdefault(dept, {'present': 0, 'absent': 0, 'late': 0, 'total': 0})
+            dept_stats[dept]['total'] += 1
+
+            if status == Attendance.STATUS_PRESENT:
+                stats['present'] += 1
+                dept_stats[dept]['present'] += 1
+            elif status == Attendance.STATUS_ABSENT:
+                stats['absent'] += 1
+                dept_stats[dept]['absent'] += 1
+            elif status == Attendance.STATUS_LATE:
+                stats['late'] += 1
+                dept_stats[dept]['late'] += 1
+            else:
+                stats['no_record'] += 1
+
+        # attendance % for the day (present+late / students with a record)
+        marked = stats['present'] + stats['absent'] + stats['late']
+        stats['attendance_pct'] = (
+            round((stats['present'] + stats['late']) / marked * 100, 1) if marked else 0
+        )
+
+    return render(request, 'attendance/attendance_by_date.html', {
+        'rows':            rows,
+        'stats':           stats,
+        'dept_stats':      dept_stats,
+        'selected_date':   selected_date,
+        'dept_filter':     dept_filter,
+        'available_dates': available_dates,
+        'departments':     departments,
+    })
+
+
+@faculty_required
 def bulk_attendance(request):
     """
     Single-page bulk attendance marking.
@@ -76,7 +160,6 @@ def bulk_attendance(request):
             messages.error(request, 'No date supplied.')
             return redirect('attendance:bulk')
 
-        from datetime import date as date_type
         try:
             from datetime import datetime
             att_date = datetime.strptime(att_date_str, '%Y-%m-%d').date()
@@ -95,7 +178,7 @@ def bulk_attendance(request):
             if status_value not in [Attendance.STATUS_PRESENT,
                                     Attendance.STATUS_ABSENT,
                                     Attendance.STATUS_LATE]:
-                continue  # skip if no value submitted for this student
+                continue
 
             obj, created = Attendance.objects.get_or_create(
                 student=student,
@@ -117,7 +200,6 @@ def bulk_attendance(request):
         if selected_dept:
             students_qs = students_qs.filter(department=selected_dept)
 
-        # pre-fetch existing records for that date in one query
         existing = {
             rec.student_id: rec.status
             for rec in Attendance.objects.filter(date=selected_date, student__in=students_qs)
@@ -183,8 +265,6 @@ def my_attendance(request):
     records = Attendance.objects.filter(student=student).order_by('-date')
     percentage = calculate_attendance_percentage(student)
 
-    # month-wise summary
-    from itertools import groupby
     monthly = {}
     for rec in records:
         key = rec.date.strftime('%B %Y')

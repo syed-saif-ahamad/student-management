@@ -8,6 +8,9 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="bi bi-calendar-check me-2"></i>Attendance</h2>
         <div class="d-flex gap-2">
+            <a href="{% url 'attendance:by_date' %}" class="btn btn-info text-white">
+                <i class="bi bi-calendar2-date me-1"></i>View by Date
+            </a>
             <a href="{% url 'attendance:bulk' %}" class="btn btn-primary">
                 <i class="bi bi-people-fill me-1"></i>Bulk Mark Attendance
             </a>
@@ -64,6 +67,17 @@
 
     <!-- Records table -->
     <div class="card shadow-sm">
+        {% if selected_date %}
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="text-muted small">
+                Showing records for <strong>{{ selected_date }}</strong>
+            </span>
+            <a href="{% url 'attendance:by_date' %}?date={{ selected_date }}"
+               class="btn btn-sm btn-outline-info">
+                <i class="bi bi-bar-chart me-1"></i>Full Day Report
+            </a>
+        </div>
+        {% endif %}
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
