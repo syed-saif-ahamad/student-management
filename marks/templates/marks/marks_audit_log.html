@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Marks Audit Log - SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-clock-history me-2"></i>Marks Audit Log</h2>
+        <a href="{% url 'marks:list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Marks
+        </a>
+    </div>
+
+    <div class="alert alert-secondary py-2 mb-3">
+        <i class="bi bi-shield-lock me-1"></i>
+        This log records every addition, edit, and deletion of marks by faculty members.
+        Entries are <strong>immutable</strong> — they cannot be edited or deleted.
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-muted small">Action</label>
+                    <select name="action" class="form-select">
+                        <option value="">All Actions</option>
+                        {% for val, label in action_choices %}
+                        <option value="{{ val }}" {% if f_action == val %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small">Faculty Username</label>
+                    <input type="text" name="faculty" class="form-control"
+                           placeholder="e.g. faculty" value="{{ f_faculty }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted small">Subject</label>
+                    <input type="text" name="subject" class="form-control"
+                           placeholder="e.g. Mathematics" value="{{ f_subject }}">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary flex-grow-1">
+                        <i class="bi bi-funnel"></i> Filter
+                    </button>
+                    <a href="{% url 'marks:audit_log' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Log table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-list-ul me-1"></i>Audit Entries</span>
+            <span class="badge bg-secondary">{{ logs|length }} record(s)</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Faculty</th>
+                        <th>Student</th>
+                        <th>Roll No</th>
+                        <th>Subject</th>
+                        <th>Exam Type</th>
+                        <th>Marks</th>
+                        <th>Changes / Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="
+                        {% if log.action == 'CREATE' %}table-success
+                        {% elif log.action == 'DELETE' %}table-danger
+                        {% else %}table-warning{% endif %}">
+                        <td class="text-muted small text-nowrap">
+                            {{ log.timestamp|date:"d M Y" }}<br>{{ log.timestamp|date:"H:i:s" }}
+                        </td>
+                        <td>
+                            {% if log.action == 'CREATE' %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-plus-circle me-1"></i>Created
+                            </span>
+                            {% elif log.action == 'UPDATE' %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="bi bi-pencil me-1"></i>Updated
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger">
+                                <i class="bi bi-trash me-1"></i>Deleted
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <i class="bi bi-person-badge me-1 text-primary"></i>
+                            {{ log.performed_by.username|default:"Unknown" }}
+                        </td>
+                        <td class="fw-semibold">{{ log.student_name }}</td>
+                        <td><span class="badge bg-secondary">{{ log.roll_no }}</span></td>
+                        <td>{{ log.subject }}</td>
+                        <td>{{ log.exam_type }}</td>
+                        <td>
+                            {% if log.marks_value is not None %}
+                            {{ log.marks_value }}/{{ log.max_marks_value }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-muted small">
+                            {% if log.changes %}{{ log.changes }}{% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox me-2"></i>No audit log entries found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if logs|length == 200 %}
+        <div class="card-footer text-muted small text-center">
+            Showing latest 200 entries. Use filters to narrow down.
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

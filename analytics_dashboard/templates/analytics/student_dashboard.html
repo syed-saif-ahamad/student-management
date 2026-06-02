@@ -66,12 +66,38 @@
         </div>
         <div class="col-lg-4">
             <div class="card shadow-sm">
-                <div class="card-header bg-white"><h5 class="mb-0">Exam History</h5></div>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Exam History</h5>
+                    <a href="{% url 'marks:my_marks' %}" class="btn btn-sm btn-outline-primary py-0">
+                        View All
+                    </a>
+                </div>
                 <ul class="list-group list-group-flush">
                     {% for record in records %}
                     <li class="list-group-item">
-                        <strong>{{ record.subject }}</strong> ({{ record.exam_type }})
-                        <br><small>{{ record.marks }}/{{ record.max_marks }} — {{ record.exam_date }}</small>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ record.subject }}</strong>
+                                <span class="badge bg-secondary ms-1">{{ record.exam_type }}</span>
+                                <br>
+                                <small class="text-muted">{{ record.exam_date }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge
+                                    {% if record.percentage >= 75 %}bg-success
+                                    {% elif record.percentage >= 40 %}bg-warning text-dark
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ record.marks }}/{{ record.max_marks }}
+                                </span>
+                                <br>
+                                <small class="text-muted">{{ record.percentage }}%</small>
+                            </div>
+                        </div>
+                        {% if record.updated_by %}
+                        <div class="text-muted mt-1" style="font-size:0.72rem">
+                            <i class="bi bi-clock me-1"></i>Updated {{ record.updated_at|date:"d M Y" }}
+                        </div>
+                        {% endif %}
                     </li>
                     {% empty %}
                     <li class="list-group-item text-muted">No exam records.</li>

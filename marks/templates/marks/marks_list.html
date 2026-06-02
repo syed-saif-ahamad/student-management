@@ -4,13 +4,27 @@
 
 {% block content %}
 <div class="container-fluid px-4">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-journal-text me-2"></i>Marks</h2>
-        <a href="{% url 'marks:create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Add Marks
-        </a>
+        <h2><i class="bi bi-journal-text me-2"></i>Marks Management</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'marks:audit_log' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-clock-history me-1"></i>Audit Log
+            </a>
+            <a href="{% url 'marks:create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Add Marks
+            </a>
+        </div>
     </div>
 
+    <!-- Faculty-only notice -->
+    <div class="alert alert-info py-2 mb-3">
+        <i class="bi bi-shield-lock me-1"></i>
+        <strong>Faculty Access Only</strong> — Only faculty members can add, edit or delete marks.
+        All changes are tracked in the audit log.
+    </div>
+
+    <!-- Filters -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="get" class="row g-2">
@@ -18,7 +32,10 @@
                     <select name="student" class="form-select">
                         <option value="">All Students</option>
                         {% for s in students %}
-                        <option value="{{ s.pk }}" {% if filters.student == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                        <option value="{{ s.pk }}"
+                            {% if filters.student == s.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ s.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -26,23 +43,29 @@
                     <select name="exam_type" class="form-select">
                         <option value="">All Exam Types</option>
                         {% for val, label in exam_types %}
-                        <option value="{{ val }}" {% if filters.exam_type == val %}selected{% endif %}>{{ label }}</option>
+                        <option value="{{ val }}"
+                            {% if filters.exam_type == val %}selected{% endif %}>{{ label }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <input type="text" name="subject" class="form-control" placeholder="Subject" value="{{ filters.subject|default:'' }}">
+                    <input type="text" name="subject" class="form-control"
+                           placeholder="Subject" value="{{ filters.subject|default:'' }}">
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Records table -->
     <div class="card shadow-sm">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>Student</th>
@@ -50,28 +73,64 @@
                         <th>Exam Type</th>
                         <th>Marks</th>
                         <th>Date</th>
+                        <th>Last Updated By</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for record in records %}
                     <tr>
-                        <td>{{ record.student.name }}</td>
+                        <td>
+                            <strong>{{ record.student.name }}</strong>
+                            <br><span class="text-muted small">{{ record.student.roll_no }}</span>
+                        </td>
                         <td>{{ record.subject }}</td>
-                        <td>{{ record.exam_type }}</td>
-                        <td>{{ record.marks }}/{{ record.max_marks }} ({{ record.percentage }}%)</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ record.exam_type }}</span>
+                        </td>
+                        <td>
+                            <span class="fw-semibold">{{ record.marks }}/{{ record.max_marks }}</span>
+                            <br>
+                            <span class="badge
+                                {% if record.percentage >= 75 %}bg-success
+                                {% elif record.percentage >= 40 %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ record.percentage }}%
+                            </span>
+                        </td>
                         <td>{{ record.exam_date }}</td>
                         <td>
-                            <a href="{% url 'marks:update' record.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
-                            <a href="{% url 'marks:delete' record.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                            {% if record.updated_by %}
+                            <span class="text-muted small">
+                                <i class="bi bi-person-check me-1"></i>{{ record.updated_by.username }}
+                                <br>{{ record.updated_at|date:"d M Y H:i" }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted small">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'marks:update' record.pk %}"
+                               class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <a href="{% url 'marks:delete' record.pk %}"
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" class="text-center text-muted py-4">No marks records.</td></tr>
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox me-2"></i>No marks records found.
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+
 </div>
 {% endblock %}

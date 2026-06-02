@@ -1,7 +1,6 @@
 from django.contrib import admin
 
 from attendance.models import Attendance
-from marks.models import Marks
 from students.models import Student
 
 
@@ -18,8 +17,4 @@ class AttendanceAdmin(admin.ModelAdmin):
     search_fields = ['student__name', 'student__roll_no']
 
 
-@admin.register(Marks)
-class MarksAdmin(admin.ModelAdmin):
-    list_display = ['student', 'subject', 'exam_type', 'marks', 'max_marks', 'exam_date']
-    list_filter = ['exam_type', 'subject']
-    search_fields = ['student__name', 'subject']
+# Note: Marks is now registered in marks/admin.py with audit trail support

@@ -10,4 +10,5 @@ urlpatterns = [
     path('<int:pk>/edit/', views.marks_update, name='update'),
     path('<int:pk>/delete/', views.marks_delete, name='delete'),
     path('my/', views.my_marks, name='my_marks'),
+    path('audit-log/', views.marks_audit_log, name='audit_log'),
 ]
