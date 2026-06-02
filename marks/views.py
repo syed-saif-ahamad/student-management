@@ -179,19 +179,8 @@ def my_marks(request):
         .order_by('subject')
     )
 
-    # Per-subject latest update info for display
-    subject_last_updated = {}
-    for rec in records:
-        subj = rec.subject
-        if subj not in subject_last_updated or rec.updated_at > subject_last_updated[subj]['updated_at']:
-            subject_last_updated[subj] = {
-                'updated_at': rec.updated_at,
-                'updated_by': rec.updated_by.get_full_name() if rec.updated_by else 'Faculty',
-            }
-
     return render(request, 'marks/my_marks.html', {
-        'records':              records,
-        'subject_wise':         subject_wise,
-        'student':              student,
-        'subject_last_updated': subject_last_updated,
+        'records':      records,
+        'subject_wise': subject_wise,
+        'student':      student,
     })
