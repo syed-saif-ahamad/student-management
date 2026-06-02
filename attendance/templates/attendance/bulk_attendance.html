@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Bulk Attendance - SMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-calendar-check me-2"></i>Bulk Attendance</h2>
+        <a href="{% url 'attendance:list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to List
+        </a>
+    </div>
+
+    <!-- Date & Department selector -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-funnel me-1"></i>Select Date &amp; Department
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">{{ date_form.date.label }}</label>
+                    {{ date_form.date }}
+                    {% if date_form.date.errors %}
+                        <div class="text-danger small">{{ date_form.date.errors }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">{{ date_form.department.label }}</label>
+                    {{ date_form.department }}
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-people me-1"></i>Load Students
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if selected_date and student_rows %}
+    <!-- Bulk marking table -->
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="date" value="{{ selected_date }}">
+        {% if selected_dept %}
+        <input type="hidden" name="department" value="{{ selected_dept }}">
+        {% endif %}
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">
+                    <i class="bi bi-calendar2-date me-1"></i>
+                    Marking attendance for: <strong>{{ selected_date }}</strong>
+                    {% if selected_dept %} — <span class="text-muted">{{ selected_dept }}</span>{% endif %}
+                    <span class="badge bg-secondary ms-2">{{ student_rows|length }} student(s)</span>
+                </span>
+                <!-- Quick-mark all buttons -->
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="markAll('Present')">
+                        <i class="bi bi-check-all"></i> All Present
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="markAll('Absent')">
+                        <i class="bi bi-x-circle"></i> All Absent
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="markAll('Late')">
+                        <i class="bi bi-clock"></i> All Late
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:60px">#</th>
+                            <th>Roll No</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th style="width:200px">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in student_rows %}
+                        <tr id="row-{{ row.student.pk }}"
+                            class="{% if row.current_status == 'Present' %}table-success{% elif row.current_status == 'Absent' %}table-danger{% elif row.current_status == 'Late' %}table-warning{% endif %}">
+                            <td class="text-muted">{{ forloop.counter }}</td>
+                            <td><span class="badge bg-secondary">{{ row.student.roll_no }}</span></td>
+                            <td class="fw-semibold">{{ row.student.name }}</td>
+                            <td>{{ row.student.department }}</td>
+                            <td>Year {{ row.student.year }}</td>
+                            <td>
+                                <select name="status_{{ row.student.pk }}"
+                                        class="form-select form-select-sm status-select"
+                                        data-row="row-{{ row.student.pk }}"
+                                        onchange="highlightRow(this)">
+                                    {% for val, label in status_choices %}
+                                    <option value="{{ val }}"
+                                        {% if row.current_status == val %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Existing records are pre-filled. Changes will overwrite previous entries.
+                </small>
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="bi bi-save me-1"></i>Save Attendance
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {% elif selected_date and not student_rows %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        No students found{% if selected_dept %} in <strong>{{ selected_dept }}</strong>{% endif %}.
+        <a href="{% url 'students:list' %}" class="alert-link ms-1">Add students first.</a>
+    </div>
+
+    {% elif not selected_date %}
+    <div class="alert alert-info">
+        <i class="bi bi-arrow-up-circle me-2"></i>
+        Select a date above and click <strong>Load Students</strong> to start marking attendance.
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Highlight a row based on the selected status
+    function highlightRow(select) {
+        var rowId = select.getAttribute('data-row');
+        var row = document.getElementById(rowId);
+        row.classList.remove('table-success', 'table-danger', 'table-warning');
+        if (select.value === 'Present')      row.classList.add('table-success');
+        else if (select.value === 'Absent')  row.classList.add('table-danger');
+        else if (select.value === 'Late')    row.classList.add('table-warning');
+    }
+
+    // Set all dropdowns to the same status
+    function markAll(status) {
+        document.querySelectorAll('.status-select').forEach(function(sel) {
+            sel.value = status;
+            highlightRow(sel);
+        });
+    }
+
+    // Initialise row colours on page load (already set via Django template class,
+    // but this keeps JS state in sync for the markAll helper)
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.status-select').forEach(function(sel) {
+            highlightRow(sel);
+        });
+    });
+</script>
+{% endblock %}

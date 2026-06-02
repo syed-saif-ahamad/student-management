@@ -6,39 +6,145 @@
 <div class="container-fluid px-4">
     <h2 class="mb-4"><i class="bi bi-calendar-check me-2"></i>My Attendance</h2>
 
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card stat-card bg-success text-white shadow-sm">
+    <!-- Summary card -->
+    <div class="row mb-4 g-3">
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-success border-4">
                 <div class="card-body">
-                    <h6 class="text-uppercase opacity-75">Attendance Percentage</h6>
-                    <h2 class="mb-0">{{ percentage }}%</h2>
+                    <h6 class="text-muted text-uppercase">Overall Attendance</h6>
+                    <h2 class="mb-0
+                        {% if percentage >= 75 %}text-success
+                        {% elif percentage >= 50 %}text-warning
+                        {% else %}text-danger{% endif %}">
+                        {{ percentage }}%
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-primary border-4">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase">Total Classes</h6>
+                    <h2 class="mb-0">{{ records|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-info border-4">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase">Present / Late</h6>
+                    <h2 class="mb-0">
+                        {% with total=records|length %}
+                        {% if total > 0 %}
+                            {% for rec in records %}{% if rec.status == 'Present' or rec.status == 'Late' %}{% endfor %}
+                        {% endif %}
+                        {% endwith %}
+                        <!-- compute in view; show percentage bar instead -->
+                        <div class="progress mt-2" style="height:8px">
+                            <div class="progress-bar bg-success" style="width:{{ percentage }}%"></div>
+                        </div>
+                        <small class="text-muted fs-6">{{ percentage }}% attended</small>
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-warning border-4">
+                <div class="card-body">
+                    <h6 class="text-muted text-uppercase">Status</h6>
+                    {% if percentage >= 75 %}
+                        <span class="badge bg-success fs-6">Good Standing</span>
+                    {% elif percentage >= 50 %}
+                        <span class="badge bg-warning text-dark fs-6">At Risk</span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6">Low Attendance</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <!-- Month-wise summary -->
+    {% if monthly %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-bar-chart me-1"></i>Month-wise Summary
+        </div>
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-sm mb-0">
                 <thead class="table-light">
-                    <tr><th>Date</th><th>Status</th></tr>
+                    <tr>
+                        <th>Month</th>
+                        <th class="text-success">Present</th>
+                        <th class="text-warning">Late</th>
+                        <th class="text-danger">Absent</th>
+                        <th>Total</th>
+                        <th>%</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    {% for record in records %}
+                    {% for month, data in monthly.items %}
                     <tr>
-                        <td>{{ record.date }}</td>
+                        <td>{{ month }}</td>
+                        <td class="text-success fw-semibold">{{ data.present }}</td>
+                        <td class="text-warning fw-semibold">{{ data.late }}</td>
+                        <td class="text-danger fw-semibold">{{ data.absent }}</td>
+                        <td>{{ data.total }}</td>
                         <td>
-                            <span class="badge {% if record.status == 'Present' %}bg-success{% elif record.status == 'Late' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
-                                {{ record.status }}
-                            </span>
+                            {% if data.total > 0 %}
+                                {% widthratio data.present|add:data.late data.total 100 %}%
+                            {% else %}—{% endif %}
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr><td colspan="2" class="text-center text-muted py-4">No attendance records yet.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+    {% endif %}
+
+    <!-- Detailed records -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-list-ul me-1"></i>Detailed Records
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.date }}</td>
+                        <td class="text-muted">{{ record.date|date:"l" }}</td>
+                        <td>
+                            <span class="badge
+                                {% if record.status == 'Present' %}bg-success
+                                {% elif record.status == 'Late' %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {% if record.status == 'Present' %}<i class="bi bi-check-circle me-1"></i>
+                                {% elif record.status == 'Late' %}<i class="bi bi-clock me-1"></i>
+                                {% else %}<i class="bi bi-x-circle me-1"></i>{% endif %}
+                                {{ record.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox me-2"></i>No attendance records yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 {% endblock %}

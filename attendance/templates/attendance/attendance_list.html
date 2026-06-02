@@ -4,35 +4,73 @@
 
 {% block content %}
 <div class="container-fluid px-4">
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="bi bi-calendar-check me-2"></i>Attendance</h2>
-        <a href="{% url 'attendance:create' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Mark Attendance
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'attendance:bulk' %}" class="btn btn-primary">
+                <i class="bi bi-people-fill me-1"></i>Bulk Mark Attendance
+            </a>
+            <a href="{% url 'attendance:create' %}" class="btn btn-outline-primary">
+                <i class="bi bi-plus-lg me-1"></i>Single Entry
+            </a>
+        </div>
     </div>
 
+    <!-- Filters -->
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="get" class="row g-2 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label">Filter by Student</label>
-                    <select name="student" class="form-select" onchange="this.form.submit()">
+                <div class="col-md-3">
+                    <label class="form-label text-muted small">Student</label>
+                    <select name="student" class="form-select">
                         <option value="">All Students</option>
                         {% for s in students %}
-                        <option value="{{ s.pk }}" {% if selected_student == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                        <option value="{{ s.pk }}"
+                            {% if selected_student == s.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ s.name }}
+                        </option>
                         {% endfor %}
                     </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small">Department</label>
+                    <select name="department" class="form-select">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept }}"
+                            {% if selected_department == dept %}selected{% endif %}>
+                            {{ dept }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small">Date</label>
+                    <input type="date" name="date" class="form-control"
+                           value="{{ selected_date|default:'' }}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary flex-grow-1">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+                    <a href="{% url 'attendance:list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Records table -->
     <div class="card shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
                         <th>Student</th>
+                        <th>Roll No</th>
+                        <th>Department</th>
                         <th>Date</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -41,24 +79,39 @@
                 <tbody>
                     {% for record in records %}
                     <tr>
-                        <td>{{ record.student.name }} ({{ record.student.roll_no }})</td>
+                        <td>{{ record.student.name }}</td>
+                        <td><span class="badge bg-secondary">{{ record.student.roll_no }}</span></td>
+                        <td>{{ record.student.department }}</td>
                         <td>{{ record.date }}</td>
                         <td>
-                            <span class="badge {% if record.status == 'Present' %}bg-success{% elif record.status == 'Late' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                            <span class="badge
+                                {% if record.status == 'Present' %}bg-success
+                                {% elif record.status == 'Late' %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {% if record.status == 'Present' %}<i class="bi bi-check-circle me-1"></i>
+                                {% elif record.status == 'Late' %}<i class="bi bi-clock me-1"></i>
+                                {% else %}<i class="bi bi-x-circle me-1"></i>{% endif %}
                                 {{ record.status }}
                             </span>
                         </td>
                         <td>
-                            <a href="{% url 'attendance:update' record.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
-                            <a href="{% url 'attendance:delete' record.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                            <a href="{% url 'attendance:update' record.pk %}"
+                               class="btn btn-sm btn-outline-warning">Edit</a>
+                            <a href="{% url 'attendance:delete' record.pk %}"
+                               class="btn btn-sm btn-outline-danger">Delete</a>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="4" class="text-center text-muted py-4">No attendance records.</td></tr>
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox me-2"></i>No attendance records found.
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+
 </div>
 {% endblock %}

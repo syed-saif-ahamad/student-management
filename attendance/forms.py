@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 
 from students.models import Student
 
@@ -16,10 +17,22 @@ class AttendanceForm(forms.ModelForm):
         }
 
 
-class BulkAttendanceForm(forms.Form):
-    date = forms.DateField(widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
-    students = forms.ModelMultipleChoiceField(
-        queryset=Student.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
-        required=False,
+class BulkAttendanceDateForm(forms.Form):
+    """Step 1 – faculty picks the date to mark attendance for."""
+    date = forms.DateField(
+        initial=timezone.localdate,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        label='Attendance Date',
     )
+    department = forms.ChoiceField(
+        required=False,
+        choices=[],          # populated dynamically in the view
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label='Filter by Department (optional)',
+    )
+
+    def __init__(self, *args, **kwargs):
+        departments = kwargs.pop('departments', [])
+        super().__init__(*args, **kwargs)
+        dept_choices = [('', 'All Departments')] + [(d, d) for d in departments]
+        self.fields['department'].choices = dept_choices
